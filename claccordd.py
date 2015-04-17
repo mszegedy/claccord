@@ -115,12 +115,11 @@ class LayoutCombo:
         self.mode_code = mode_code
         self.char_code = char_code
         self.output_code = output_code
-        ## build input keys
-        self.mode_keys = []
-        self.char_keys = []
         self.mode_position = mode_position
         self.char_position = char_position
     def compile(self):
+        """Sets self.mode_keys and self.char_keys based on the saved mode_code
+        and char_code."""
         mode_code = self.mode_code
         char_code = self.char_code
         output_code = self.output_code
@@ -138,8 +137,12 @@ class LayoutCombo:
             self.output_keys.append(Keypress(output_code.upper()))
         ## deal with non-alphanumeric characters encoded by single keys
         elif category in ('NONALNUM','NONALNUM_SHIFTED'):
+            nonalnum_key_name = None
             if category[-8:] == '_SHIFTED':
                 self.output_keys.append(Keypress(SHIFT_KEY))
+                nonalnum_key_name = SHIFT_NONALNUM_MAP[output_code]
+            else:
+                nonalnum_key_name = NOSHIFT_NONALNUM_MAP[output_code]
             self.output_keys.append(Keypress(nonalnum_key_name))
         ## deal with special characters, i.e. codes; codes must begin with a
         ## plus sign, and have the rest consist of uppercase letters and
@@ -166,6 +169,7 @@ class LayoutCombo:
                     tuple(unicode_sequence.upper()) +\
                     ('U_KEYUP', SHIFT_KEY+'_KEYUP', CTRL_KEY+'_KEYUP')))
     def get_category(self):
+        output_code = self.output_code
         lowercase_letter_matcher = re.compile(r'^[a-z]$')
         lowercase_letter_matches = lowercase_letter_matcher.match(output_code)
         if lowercase_letter_matches != None:
@@ -177,7 +181,7 @@ class LayoutCombo:
         nonalnum_key_name = None
         is_shifted = False
         try:
-            nonalnum_key_name = SHIFT_NONALNUM_MAP[self.output_code]
+            nonalnum_key_name = SHIFT_NONALNUM_MAP[output_code]
             return 'NONALNUM_SHIFTED'
         except KeyError:
             pass
@@ -327,21 +331,21 @@ for line in layout_file:
                 layout_combo_copy.output_keys[0:0] = modifier_keys
                 layout_combos[layout_combo_copy.get_layout_combos_key()] =\
                     layout_combo_copy
-    else:
-        char_line_matches = char_line_matcher.match(line)
-        if char_line_matches != None: # it's a char line
-            char_position = 'M'
-            if char_line_matches.group(1) != ' ':
-                char_position = char_line_matches.group(1)
-            layout_combo = LayoutCombo(mode,
-                                       char_line_matches.group(2),
-                                       char_line_matches.group(3),
-                                       mode_position,
-                                       char_position)
-            layout_combo.compile()
-            layout_combos[layout_combo.get_layout_combos_key()] = layout_combo
-        else:
-            print("Invalid layout file! Error on line "+str(line_count))
+        continue
+    char_line_matches = char_line_matcher.match(line)
+    if char_line_matches != None: # it's a char line
+        char_position = 'M'
+        if char_line_matches.group(1) != ' ':
+            char_position = char_line_matches.group(1)
+        layout_combo = LayoutCombo(mode,
+                                   char_line_matches.group(2),
+                                   char_line_matches.group(3),
+                                   mode_position,
+                                   char_position)
+        layout_combo.compile()
+        layout_combos[layout_combo.get_layout_combos_key()] = layout_combo
+        continue
+    print("Invalid layout file! Error on line "+str(line_count))
 ## start keyboarding
 for key in layout_combos.keys():
     print(key+" : "+layout_combos[key].output_code+" : "+\

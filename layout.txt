@@ -14,6 +14,7 @@
   **-*  ó;
   ***-  í;
   ---** ú; # doesn't need rolling technique
+  ****  ý;
 L *---  ä;
 L -*--  ö;
 L --*-  ü;
@@ -34,30 +35,35 @@ U *-**  A; # append to end of line
 U **-*  +VIM_BLOCKWISE_VISUAL; # blockwise visual mode
 U ***-  :%s/; # regex global search and replace mode
 U ****  ;; # vim command line
-----*: # diphthongs
+L---*: # diphthongs
   *---  ei;
   -*--  ai;
   --*-  oi;
   ---*  ie;
   ----* ou;
  *----  er;
- **---  ier;
+ **---  ly;
   ---** or;
   **--  ea;
   -**-  au;
   --**  oi;
   *--*  gh;
-L----*: # multiple consonants
+  *-**  ão;
+L--*-: # multiple consonants
   *---  ch;
   -*--  th;
   --*-  sh;
   ---*  ng;
   ----* qu;
- *----  rt;
- **---  rd;
+ *----  gy;
   **--  ph;
   -**-  st;
-  --**  mn;
+  --**  ny;
+  -***  sz;
+  ***-  zs;
+  *-**  ty;
+  **-*  gy;
+  ****  dzs;
 ---*: # consonants 1, vim movement keys 1
   *---  h;
   -*--  t;
@@ -96,6 +102,42 @@ U ***-  G; #end of document
   **-*  Ó;
   ***-  Í;
   ---** Ú;
+L *---  Ä;
+L -*--  Ö;
+L --*-  Ü;
+L ---*  Ã;
+L **--  Ő;
+L -**-  Ű;
+L --**  Õ;
+L-*-*: # capital diphthongs
+  *---  Ei;
+  -*--  Ai;
+  --*-  Oi;
+  ---*  Ie;
+  ----* Ou;
+ *----  Er;
+ **---  Ly;
+  ---** Or;
+  **--  Ea;
+  -**-  Au;
+  --**  Oi;
+  *--*  Gh;
+  *-**  Ão;
+L-**-: # capital multiple consonants
+  *---  Ch;
+  -*--  Th;
+  --*-  Sh;
+  ---*  Ng;
+  ----* Qu;
+ *----  Gy;
+  **--  Ph;
+  -**-  St;
+  --**  Ny;
+  -***  Sz;
+  ***-  Zs;
+  *-**  Ty;
+  **-*  Gy;
+  ****  Dzs;
 -*-*= S+---* # capital consonants 1
 -***= S+--** # capital consonants 2
 --*-: # typography
@@ -117,6 +159,15 @@ U ***-  G; #end of document
   -**-  ";
   *--*  ?;
   ****  !;
+L *---  $;
+L -*--  €;
+L --*-  £;
+L ---*  ₽;
+L **--  ₵;
+L -**-  ₪;
+L --**  ¥;
+L -***  ₱;
+L ***-  ₩;
 -**-: # typography/programming
   *---  /;
   -*--  =;
