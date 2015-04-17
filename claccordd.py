@@ -117,6 +117,9 @@ class LayoutCombo:
         self.output_code = output_code
         self.mode_position = mode_position
         self.char_position = char_position
+        self.mode_keys = []
+        self.char_keys = []
+        self.output_keys = []
     def compile(self):
         """Sets self.mode_keys and self.char_keys based on the saved mode_code
         and char_code."""
@@ -178,18 +181,10 @@ class LayoutCombo:
         uppercase_letter_matches = uppercase_letter_matcher.match(output_code)
         if uppercase_letter_matches != None:
             return 'ALNUM_UPPER'
-        nonalnum_key_name = None
-        is_shifted = False
-        try:
-            nonalnum_key_name = SHIFT_NONALNUM_MAP[output_code]
-            return 'NONALNUM_SHIFTED'
-        except KeyError:
-            pass
-        try:
-            nonalnum_key_name = NOSHIFT_NONALNUM_MAP[output_code]
+        if output_code in NOSHIFT_NONALNUM_MAP.keys():
             return 'NONALNUM'
-        except KeyError:
-            pass
+        if output_code in SHIFT_NONALNUM_MAP.keys():
+            return 'NONALNUM_UPPER'
         special_code_matcher = re.compile(r'\+[A-Z_]+')
         special_code_matches = special_code_matcher.match(output_code)
         if special_code_matches != None:
@@ -272,7 +267,7 @@ except FileNotFoundError:
 # layout_combos: dictionary for storing the possible combos to press; keys are
 # the mode code, char code, mode position, and char position concatenated
 # together
-layout_combos = {} 
+layout_combos = {}
 file_mode = None
 line_count = 0
 for line in layout_file:
@@ -280,35 +275,45 @@ for line in layout_file:
     # absolutely disgusting:
     mode_line_matcher =\
         re.compile(
-            r'([MUL])?([-*]{4,})'
+            r'^([MUL])?([-*]{4,})'
             r'((:)|=\s*((S\+|C\+|M\+)*)([MUL])?([-*]{4,}))\s*(#.*)?')
     # match groups:
-    # 0: the whole line, if it's a valid mode line
+    # 0: the whole line, if it's a valid mode line (unused)
     # 1: the position modifier of the mode keys, if any
     # 2: the keys of the mode this is defining
-    # 3: the rest of the line that isn't a comment
+    # 3: the rest of the line that isn't a comment (unused)
     # 4: the colon, if it's an original mode and not a copied one
     # 5: the modifier keys, if it's a copied mode
-    # 6: the last modifier key, if it's a copied mode
+    # 6: the last modifier key, if it's a copied mode (unused)
     # 7: the position of the mode it's copying from, if any
     # 8: the keys of mode it's copying from, if any
-    # 9: the comment, if any
-    char_line_matcher = re.compile(r'([ MUL])([-* ]{6}) (.+);\s*(#.*)?')
-    # match groups:
-    # 0: the whole line, if it's a valid char line
-    # 1: the position modifier of the char keys, if any
-    # 2: the keys of the char that this is defining
-    # 3: the char that this is defining
-    # 4: the comment, if any
+    # 9: the comment, if any (unused)
     mode_line_matches = mode_line_matcher.match(line)
     if mode_line_matches != None: # it's a mode line
         mode = mode_line_matches.group(2)
         mode_position = 'M'
         if mode_line_matches.group(1) != None:
             mode_position = mode_line_matches.group(1)
+            print(("%(line_count)03d"+": "+mode_position+mode) %\
+                  {'line_count' : line_count})
         if mode_line_matches.group(4) != None:
+            print("    MODE LINE (U) @ "+str(line_count))
             pass
-        else: # if this mode is a copy of another
+        else:
+            # if this mode is a copy of another
+            print("    MODE LINE (C) @ "+str(line_count))
+            if line_count in (141, 142) + tuple(range(189, 205)):
+                for x in range(0, 10):
+                    print("    GROUP "+str(x)+": "+\
+                          str(mode_line_matches.group(x)))
+                print("    POSSIBLE KEYS TO COPY:")
+                for layout_combo in\
+                    [layout_combos[layout_combo_key]\
+                     for layout_combo_key in\
+                     layout_combos.keys() if\
+                     layout_combos[layout_combo_key].mode_code ==\
+                     mode_line_matches.group(8)]:
+                    print("        "+layout_combo.get_layout_combos_key())
             modifier_keys = []
             if mode_line_matches.group(5) != None:
                 for modifier in mode_line_matches.group(5).split('+')[:-1]:
@@ -322,16 +327,26 @@ for line in layout_file:
                 [layout_combos[layout_combo_key] for layout_combo_key in\
                  layout_combos.keys() if\
                  layout_combos[layout_combo_key].mode_code ==\
-                mode_line_matches.group(8) and\
-                layout_combo.mode_position ==\
-                ('M' if mode_line_matches.group(7) == None else\
-                 mode_line_matches.group(7))]:
+                 mode_line_matches.group(8) and\
+                 layout_combos[layout_combo_key].mode_position ==\
+                 ('M' if mode_line_matches.group(7) == None else\
+                  mode_line_matches.group(7))]:
                 layout_combo_copy = copy.deepcopy(layout_combo)
                 layout_combo_copy.set_mode(mode, mode_position)
                 layout_combo_copy.output_keys[0:0] = modifier_keys
                 layout_combos[layout_combo_copy.get_layout_combos_key()] =\
                     layout_combo_copy
+                print ("    COPIED CHARS TO " +\
+                       layout_combo_copy.get_layout_combos_key() +\
+                       " ON LINE " + str(line_count))
         continue
+    char_line_matcher = re.compile(r'([ MUL])([-* ]{6}) (.+);\s*(#.*)?')
+    # match groups:
+    # 0: the whole line, if it's a valid char line (unused)
+    # 1: the position modifier of the char keys, if any
+    # 2: the keys of the char that this is defining
+    # 3: the char that this is defining
+    # 4: the comment, if any (unused)
     char_line_matches = char_line_matcher.match(line)
     if char_line_matches != None: # it's a char line
         char_position = 'M'
@@ -349,7 +364,7 @@ for line in layout_file:
 ## start keyboarding
 for key in layout_combos.keys():
     print(key+" : "+layout_combos[key].output_code+" : "+\
-            str([keypress.key_name for keypress in layout_combos[key].output_keys]))
+          str([keypress.key_name for keypress in layout_combos[key].output_keys]))
 ui = evdev.UInput()
 kb = evdev.InputDevice('/dev/input/event0')
 kb.grab()
