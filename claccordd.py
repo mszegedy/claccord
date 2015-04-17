@@ -139,9 +139,9 @@ class LayoutCombo:
                 self.output_keys.append(Keypress(SHIFT_KEY))
             self.output_keys.append(Keypress(output_code.upper()))
         ## deal with non-alphanumeric characters encoded by single keys
-        elif category in ('NONALNUM','NONALNUM_SHIFTED'):
+        elif category in ('NOSHIFT_NONALNUM','SHIFT_NONALNUM'):
             nonalnum_key_name = None
-            if category[-8:] == '_SHIFTED':
+            if category == 'SHIFT_NONALNUM':
                 self.output_keys.append(Keypress(SHIFT_KEY))
                 nonalnum_key_name = SHIFT_NONALNUM_MAP[output_code]
             else:
@@ -153,7 +153,6 @@ class LayoutCombo:
         elif category == 'SPECIAL':
             try:
                 special_key_sequence = SPECIAL_CHARS_MAP[output_code]
-                typablep = True
                 for key_name in special_key_sequence:
                     self.output_keys.append(Keypress(key_name))
             except KeyError:
@@ -182,9 +181,9 @@ class LayoutCombo:
         if uppercase_letter_matches != None:
             return 'ALNUM_UPPER'
         if output_code in NOSHIFT_NONALNUM_MAP.keys():
-            return 'NONALNUM'
+            return 'NOSHIFT_NONALNUM'
         if output_code in SHIFT_NONALNUM_MAP.keys():
-            return 'NONALNUM_UPPER'
+            return 'SHIFT_NONALNUM'
         special_code_matcher = re.compile(r'\+[A-Z_]+')
         special_code_matches = special_code_matcher.match(output_code)
         if special_code_matches != None:
@@ -294,26 +293,26 @@ for line in layout_file:
         mode_position = 'M'
         if mode_line_matches.group(1) != None:
             mode_position = mode_line_matches.group(1)
-            print(("%(line_count)03d"+": "+mode_position+mode) %\
-                  {'line_count' : line_count})
+            # print(("%(line_count)03d"+": "+mode_position+mode) %\
+            #       {'line_count' : line_count})
         if mode_line_matches.group(4) != None:
-            print("    MODE LINE (U) @ "+str(line_count))
+            # print("    MODE LINE (U) @ "+str(line_count))
             pass
         else:
             # if this mode is a copy of another
-            print("    MODE LINE (C) @ "+str(line_count))
-            if line_count in (141, 142) + tuple(range(189, 205)):
-                for x in range(0, 10):
-                    print("    GROUP "+str(x)+": "+\
-                          str(mode_line_matches.group(x)))
-                print("    POSSIBLE KEYS TO COPY:")
-                for layout_combo in\
-                    [layout_combos[layout_combo_key]\
-                     for layout_combo_key in\
-                     layout_combos.keys() if\
-                     layout_combos[layout_combo_key].mode_code ==\
-                     mode_line_matches.group(8)]:
-                    print("        "+layout_combo.get_layout_combos_key())
+            # print("    MODE LINE (C) @ "+str(line_count))
+            # if line_count in (141, 142) + tuple(range(189, 205)):
+            #     for x in range(0, 10):
+            #         print("    GROUP "+str(x)+": "+\
+            #               str(mode_line_matches.group(x)))
+            #     print("    POSSIBLE KEYS TO COPY:")
+            #     for layout_combo in\
+            #         [layout_combos[layout_combo_key]\
+            #          for layout_combo_key in\
+            #          layout_combos.keys() if\
+            #          layout_combos[layout_combo_key].mode_code ==\
+            #          mode_line_matches.group(8)]:
+            #         print("        "+layout_combo.get_layout_combos_key())
             modifier_keys = []
             if mode_line_matches.group(5) != None:
                 for modifier in mode_line_matches.group(5).split('+')[:-1]:
@@ -335,10 +334,10 @@ for line in layout_file:
                 layout_combo_copy.set_mode(mode, mode_position)
                 layout_combo_copy.output_keys[0:0] = modifier_keys
                 layout_combos[layout_combo_copy.get_layout_combos_key()] =\
-                    layout_combo_copy
-                print ("    COPIED CHARS TO " +\
-                       layout_combo_copy.get_layout_combos_key() +\
-                       " ON LINE " + str(line_count))
+                              layout_combo_copy
+                # print ("    COPIED CHARS TO " +\
+                #        layout_combo_copy.get_layout_combos_key() +\
+                #        " ON LINE " + str(line_count))
         continue
     char_line_matcher = re.compile(r'([ MUL])([-* ]{6}) (.+);\s*(#.*)?')
     # match groups:
@@ -362,9 +361,9 @@ for line in layout_file:
         continue
     print("Invalid layout file! Error on line "+str(line_count))
 ## start keyboarding
-for key in layout_combos.keys():
-    print(key+" : "+layout_combos[key].output_code+" : "+\
-          str([keypress.key_name for keypress in layout_combos[key].output_keys]))
+# for key in layout_combos.keys():
+#     print(key+" : "+layout_combos[key].output_code+" : "+\
+#           str([keypress.key_name for keypress in layout_combos[key].output_keys]))
 ui = evdev.UInput()
 kb = evdev.InputDevice('/dev/input/event0')
 kb.grab()
