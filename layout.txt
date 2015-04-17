@@ -35,7 +35,7 @@ U *-**  A; # append to end of line
 U **-*  +VIM_BLOCKWISE_VISUAL; # blockwise visual mode
 U ***-  :%s/; # regex global search and replace mode
 U ****  ;; # vim command line
-L---*: # diphthongs
+U---*: # diphthongs
   *---  ei;
   -*--  ai;
   --*-  oi;
@@ -190,15 +190,15 @@ L ***-  ₩;
 ***-= C+-*-- # ctrl + uppercase vowels and semivowels
 **-*= C+-*-* # ctrl + uppercase consonants 1
 ****= C+-*** # ctrl + uppercase consonants 2
-L--*-= M+---- # alt + lowercase vowels and semivowels
-L---*= M+---* # alt + lowercase consonants 1
-L--**= M+--** # alt + lowercase consonants 2
-L-**-= M+-**- # alt + uppercase vowels and semivowels
-L-*-*= M+-*-* # alt + uppercase consonants 1
-L-***= M+-*** # alt + uppercase consonants 2
-L*-*-= C+M+---- # ctrl + alt + lowercase vowels and semivowels
-L*--*= C+M+---* # ctrl + alt + lowercase consonants 1
-L*-**= C+M+--** # ctrl + alt + lowercase consonants 2
-L***-= C+M+-**- # ctrl + alt + uppercase vowels and semivowels
-L**-*= C+M+-*-* # ctrl + alt + uppercase consonants 1
-L****= C+M+-*** # ctrl + alt + uppercase consonants 2
+U--*-= M+---- # alt + lowercase vowels and semivowels
+U---*= M+---* # alt + lowercase consonants 1
+U--**= M+--** # alt + lowercase consonants 2
+U-**-= M+-**- # alt + uppercase vowels and semivowels
+U-*-*= M+-*-* # alt + uppercase consonants 1
+U-***= M+-*** # alt + uppercase consonants 2
+U*-*-= C+M+---- # ctrl + alt + lowercase vowels and semivowels
+U*--*= C+M+---* # ctrl + alt + lowercase consonants 1
+U*-**= C+M+--** # ctrl + alt + lowercase consonants 2
+U***-= C+M+-**- # ctrl + alt + uppercase vowels and semivowels
+U**-*= C+M+-*-* # ctrl + alt + uppercase consonants 1
+U****= C+M+-*** # ctrl + alt + uppercase consonants 2
