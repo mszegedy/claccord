@@ -35,7 +35,7 @@ U *-**  A; # append to end of line
 U **-*  +VIM_BLOCKWISE_VISUAL; # blockwise visual mode
 U ***-  :%s/; # regex global search and replace mode
 U ****  ;; # vim command line
-U---*: # diphthongs
+L---*: # diphthongs
   *---  ei;
   -*--  ai;
   --*-  oi;
@@ -46,7 +46,7 @@ U---*: # diphthongs
   ---** or;
   **--  ea;
   -**-  au;
-  --**  oi;
+  --**  oa;
   *--*  gh;
   *-**  ão;
 L--*-: # multiple consonants
@@ -59,6 +59,7 @@ L--*-: # multiple consonants
   **--  ph;
   -**-  st;
   --**  ny;
+  ---** ck;
   -***  sz;
   ***-  zs;
   *-**  ty;
