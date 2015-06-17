@@ -90,7 +90,7 @@ class Key:
             print("Badly defined key of name \"" + name +"\"!")
             class KeyDefinitionError(Exception):
                 pass
-            raise KeyDefinitionError
+            raise KeyDefinitionError()
 
 class Keypress:
     """
@@ -147,7 +147,7 @@ class LayoutCombo:
         ## underscores
         elif category == 'SPECIAL':
             try:
-                self.output_keypresses = SPECIAL_CHARS[output_code]
+                self.output_keypresses = list(SPECIAL_CHARS[output_code])
             except KeyError:
                 print("Warning: probably an invalid special sequence code on "
                       "line " + str(line_count) + "!")
@@ -207,7 +207,6 @@ class LayoutCombo:
         combination."""
         EV_KEY = evdev.ecodes.EV_KEY
         for keypress in self.output_keypresses:
-            print(keypress.key)
             if keypress.key_action == "PRESS":
                 ui.write(EV_KEY, keypress.key.code, KEYDOWN)
                 print(keypress.key.name+" DOWN")
@@ -271,14 +270,14 @@ header_line_matcher = re.compile(r'^\[(\w+)\](#.*)?')
 # 2: the comment, if any (unused)
 
 definition_line_matcher = \
-    re.compile(r'^\s*([\w_]+)\s*=\s*([^#\n]*[^#\s])?\s*(#.*)?')
+    re.compile(r'^\s*(\S+)\s*=\s*([^#\n]*[^#\s])?\s*(#.*)?')
 # match groups:
 # 0: the whole line, if it's a valid definition line (unused)
 # 1: the defined variable's name
 # 2: the defined variable's value
 # 3: the comment, if any (unused)
 
-special_char_matcher = re.compile(r'^\+\w+$')
+special_char_matcher = re.compile(r'^\+[\w_]+$')
 # for use in identifying valid SpecialChars definitions
 
 symbol_matcher = re.compile(r'^((PRESS|DOWN|UP)!)?(\w+)$')
@@ -367,8 +366,7 @@ for line in conf_file:
                 print("Invalid definition in conf file! Error on line " +\
                       str(line_count))
         elif header == "SpecialChars":
-            special_char_matcher.match(var_name)
-            if special_char_matcher.matches() != None:
+            if special_char_matcher.match(var_name) != None:
                 def break_down_symbol(symbol):
                     """Make up the arguments for the map() call in the definition
                     of key_sequence."""
@@ -527,7 +525,7 @@ for event in kb.read_loop():
             ## if it's a change in the mode keys:
             if key_event.scancode in [c.code for c in ALL_MODE_KEYS]:
                 mode_keys_active.remove(key_event.scancode)
-            else:
+            elif key_event.scancode in [c.code for c in ALL_CHAR_KEYS]:
                 ## figure out whether any char keys are being held down
                 active_keys = kb.active_keys()
                 char_keys_are_active = False
@@ -548,6 +546,9 @@ for event in kb.read_loop():
                         ui.syn()
                     # zero out the active char keys
                     char_keys_active = set([])
+            else:
+                ui.write_event(event)
+                ui.syn()
         else:
             ui.write_event(event)
             ui.syn()
