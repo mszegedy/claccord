@@ -129,7 +129,7 @@ class LayoutCombo:
             uppercase_letter_matches = uppercase_letter_matcher.match(output_code)
             if uppercase_letter_matches != None:
                 return 'ALNUM_UPPER'
-            special_code_matcher = re.compile(r'\+\w+')
+            special_code_matcher = re.compile(r'\+[\w_]+')
             special_code_matches = special_code_matcher.match(output_code)
             if special_code_matches != None:
                 return 'SPECIAL'
@@ -444,14 +444,6 @@ for line in layout_file:
             #     for x in range(0, 10):
             #         print("    GROUP "+str(x)+": "+\
             #               str(mode_line_matches.group(x)))
-            #     print("    POSSIBLE KEYS TO COPY:")
-            #     for layout_combo in\
-            #         [layout_combos[layout_combo_key]\
-            #          for layout_combo_key in\
-            #          layout_combos.keys() if\
-            #          layout_combos[layout_combo_key].mode_code ==\
-            #          mode_line_matches.group(8)]:
-            #         print("        "+layout_combo.get_layout_combos_key())
             modifier_keys = []
             if mode_line_matches.group(5) != None:
                 for modifier in mode_line_matches.group(5).split('+')[:-1]:
@@ -462,9 +454,12 @@ for line in layout_file:
                     elif modifier == 'M':
                         modifier_keys.append(ALT_KEY)
             # select every layout combo with the same mode keys as ours:
-            mode_code = mode_line_matches.group(8)
-            mode_position = mode_line_matches.group(7)
-            dummy_layout_combo = LayoutCombo(mode_code, '', '', mode_position)
+            original_mode = mode_line_matches.group(8)
+            original_mode_position = mode_line_matches.group(7)
+            dummy_layout_combo = LayoutCombo(original_mode,
+                                             '',
+                                             '',
+                                             original_mode_position)
             for layout_combo in \
                 layout_combos.data[
                     keys_hash(dummy_layout_combo.mode_keys)].values():
@@ -475,9 +470,6 @@ for line in layout_file:
                 layout_combo_copy.output_keypresses.extend(
                     [Keypress(key, "UP") for key in modifier_keys[::-1]])
                 layout_combos.store(layout_combo_copy)
-                # print ("    COPIED CHARS TO " +\
-                #        layout_combo_copy.get_layout_combos_key() +\
-                #        " ON LINE " + str(line_count))
         continue
     char_line_matches = char_line_matcher.match(line)
     if char_line_matches != None: # it's a char line
@@ -490,6 +482,19 @@ for line in layout_file:
                                    mode_position,
                                    char_position)
         layout_combos.store(layout_combo)
+        # print("    LAYOUT STORED:")
+        # print("        MODE KEYS: ", end="")
+        # for key in layout_combo.mode_keys:
+        #     print(key.name + " ", end="")
+        # print()
+        # print("        CHAR KEYS: ", end="")
+        # for key in layout_combo.char_keys:
+        #     print(key.name + " ", end="")
+        # print()
+        # print("        OUTPUT KEYPRESSES: ", end="")
+        # for keypress in layout_combo.output_keypresses:
+        #     print(keypress.key_action + "!" + keypress.key.name + " ", end="")
+        # print()
         continue
     blank_line_matches = blank_line_matcher.match(line)
     if blank_line_matches != None: # it's blank

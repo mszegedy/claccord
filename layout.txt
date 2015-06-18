@@ -125,7 +125,7 @@ L-*-*: # capital diphthongs
   -**-  Au;
   --**  Oi;
   *--*  Gh;
-  *-**  Ão;
+  *-**  ões;
 L-**-: # capital multiple consonants
   *---  Ch;
   -*--  Th;
