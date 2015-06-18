@@ -38,7 +38,7 @@ U ****  ;; # vim command line
 L---*: # diphthongs
   *---  ei;
   -*--  ai;
-  --*-  oi;
+  --*-  ow;
   ---*  ie;
   ----* ou;
  *----  er;
@@ -47,6 +47,8 @@ L---*: # diphthongs
   **--  ea;
   -**-  au;
   --**  oa;
+  *-*-  eu;
+  -*-*  ae;
   *--*  gh;
   *-**  ão;
 L--*-: # multiple consonants
@@ -160,15 +162,16 @@ L-**-: # capital multiple consonants
   -**-  ";
   *--*  ?;
   ****  !;
-L *---  $;
-L -*--  €;
-L --*-  £;
-L ---*  ₽;
-L **--  ¢;
-L -**-  ₪;
-L --**  ¥;
-L -***  ₱;
-L ***-  ₩;
+L*----  0;
+L *---  1;
+L -*--  2;
+L **--  3;
+L --*-  4;
+L *-*-  5;
+L -**-  6;
+L ***-  7;
+L ---*  8;
+L *--*  9;
 -**-: # typography/programming
   *---  /;
   -*--  =;
@@ -185,6 +188,15 @@ L ***-  ₩;
   ***-  &;
   -***  %;
   ****  #;
+L *---  $;
+L -*--  €;
+L --*-  £;
+L ---*  ₽;
+L **--  ¢;
+L -**-  ₪;
+L --**  ¥;
+L -***  ₱;
+L ***-  ₩;
 *---= C+---- # ctrl + lowercase vowels and semivowels
 *--*= C+---* # ctrl + lowercase consonants 1
 *-**= C+--** # ctrl + lowercase consonants 2
