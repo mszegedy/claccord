@@ -12,10 +12,14 @@ Todo:
 
 - Make it maximally compatible with every keyboard layout using
   `setxkbmap -print`, `/usr/include/X11/keysymdef.h`, and
-`/usr/share/X11/xkb/symbols/`, and eliminate the appropriate options
-from `keys.conf`.
+`/usr/share/X11/xkb/`, and eliminate the appropriate options from
+`keys.conf`.
 - Make the hashing on the key combos much faster.
 - Allow an arbitrary number of sets of mode keys and char keys, or at
   least sets labeled A-Z rather than just M/U/L.
 - Allow switching of claccord layouts using the number keys.
+- Come up with a complete suite of presets that represent the typical
+  use case, and not just my personal needs. Especially come up with a
+layout for IPA.
+- Write an install script.
 - Clean up a little.
