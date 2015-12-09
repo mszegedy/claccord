@@ -20,10 +20,11 @@
 """claccordd daemon main file."""
 
 ### imports
-import sys
-import copy
-import re
-import evdev
+import sys        # exiting nicely
+import copy       # copying KeyCombo's over
+import re         # parsing files
+import subprocess # setxkbmap -print
+import evdev      # I/O
 
 ### constants
 KEYDOWN = 1 # evdev events use 1 for key being pressed down and

@@ -10,10 +10,8 @@ it grabs the required keys to produce them for some reason.
 
 Todo:
 
-- Make it maximally compatible with every keyboard layout using
-  `setxkbmap -print`, `/usr/include/X11/keysymdef.h`, and
-`/usr/share/X11/xkb/`, and eliminate the appropriate options from
-`keys.conf`.
+- Make it maximally compatible with every keyboard layout by switching the
+  backend to Xlib and using XKeyEvents to send keypresses instead.
 - Make the hashing on the key combos much faster.
 - Allow an arbitrary number of sets of mode keys and char keys, or at
   least sets labeled A-Z rather than just M/U/L.
