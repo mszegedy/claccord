@@ -20,11 +20,16 @@
 """claccordd daemon main file."""
 
 ### imports
-import sys        # exiting nicely
-import copy       # copying KeyCombo's over
-import re         # parsing files
-import subprocess # setxkbmap -print
-import evdev      # I/O
+import sys   # exiting nicely
+import copy  # copying KeyCombo's over
+import re    # parsing files
+import evdev # I/O
+from functools import reduce
+
+### necessary grabbing of keyboard so that keymasks can be formulated
+kb = evdev.InputDevice('/dev/input/event0')
+KB_CAPABILITIES = kb.capabilities()[1] #list of ecodes that work on the kb
+HIGHEST_SCANCODE = max(KB_CAPABILITIES)
 
 ### constants
 KEYDOWN = 1 # evdev events use 1 for key being pressed down and
@@ -33,12 +38,9 @@ ECODES = evdev.ecodes.ecodes
 
 ### global variables that will get defined later when keys.conf is read
 ONE_KEY_MODE = None  # True or False
-M_MODE_KEYS = None   # a tuple of Key's
-U_MODE_KEYS = None   # a tuple of Key's
-L_MODE_KEYS = None   # a tuple of Key's
-M_CHAR_KEYS = None   # a tuple of Key's
-U_CHAR_KEYS = None   # a tuple of Key's
-L_CHAR_KEYS = None   # a tuple of Key's
+DEFAULT_LABEL = None # a string matching the regex /^[A-Z]$/
+MODE_KEYS = {}       # a dict of tuples of Key's
+CHAR_KEYS = {}       # a dict of tuples of Key's
 SHIFT_KEY = None     # a Key (typically LEFTSHIFT or RIGHTSHIFT)
 CTRL_KEY = None      # a Key (typically LEFTCTRL or RIGHTCTRL)
 ALT_KEY = None       # a Key (typically LEFTALT or RIGHTALT)
@@ -59,7 +61,7 @@ def scancodes_hash(codes):
     # algorithm provided by Mihai on the Theoretical Computer Science Stack
     # Exchange at the URL:
     # http://cstheory.stackexchange.com/questions/3390/is-there-a-hash-function-for-a-collection-i-e-multi-set-of-integers-that-has
-    big_prime = 769 # big enough for our purposes; scancodes only go up to 768
+    big_prime = HIGHEST_SCANCODE # big enough for our purposes
     output = 0
     for index, code in enumerate(codes):
         output += code*big_prime**index
@@ -104,7 +106,7 @@ class Keypress:
 class LayoutCombo:
     """A combo of keys that produces an output."""
     def __init__(self, mode_code, char_code, output_code,
-                 mode_position='M', char_position='M'):
+                 mode_position=DEFAULT_LABEL, char_position=DEFAULT_LABEL):
         ## instance variables
         self.mode_keys = []
         self.char_keys = []
@@ -172,14 +174,8 @@ class LayoutCombo:
     def set_mode(self, mode_code, mode_position=None):
         self.mode_keys = []
         if mode_position == None:
-            mode_position = 'M'
-        mode_keys_map = {}
-        if mode_position == 'M':
-            mode_keys_map = M_MODE_KEYS
-        elif mode_position == 'U':
-            mode_keys_map = U_MODE_KEYS
-        elif mode_position == 'L':
-            mode_keys_map = L_MODE_KEYS
+            mode_position = DEFAULT_LABEL
+        mode_keys_map = MODE_KEYS[mode_position]
         for place, sign in enumerate(mode_code):
             if sign == '*':
                 key = mode_keys_map[place]
@@ -189,14 +185,8 @@ class LayoutCombo:
     def set_char(self, char_code, char_position=None):
         self.char_keys = []
         if char_position == None:
-            char_position = 'M'
-        char_keys_map = {}
-        if char_position == 'M':
-            char_keys_map = M_CHAR_KEYS
-        elif char_position == 'U':
-            char_keys_map = U_CHAR_KEYS
-        elif char_position == 'L':
-            char_keys_map = L_CHAR_KEYS
+            char_position = DEFAULT_LABEL
+        char_keys_map = CHAR_KEYS[char_position]
         for place, sign in enumerate(char_code):
             if sign == '*':
                 key = char_keys_map[place]
@@ -249,20 +239,18 @@ class LayoutComboContainer:
 ## matchers and necessary variables
 # A review of the variables keys.conf sets:
 #  [GeneralSettings]
-#   ONE_KEY_MODE  True or False
+#   ONE_KEY_MODE   True or False
+#   DEFAULT_LABEL  a letter between A and Z
 #  [InputKeys]
-#   M_MODE_KEYS   a list of Key's
-#   U_MODE_KEYS   a list of Key's
-#   L_MODE_KEYS   a list of Key's
-#   M_CHAR_KEYS   a list of Key's
-#   U_CHAR_KEYS   a list of Key's
-#   L_CHAR_KEYS   a list of Key's
-#   SHIFT_KEY     a Key (typically LEFTSHIFT or RIGHTSHIFT)
-#   CTRL_KEY      a Key (typically LEFTCTRL or RIGHTCTRL)
-#   ALT_KEY       a Key (typically LEFTALT or RIGHTALT)
-#   QUIT_KEY      a Key
+#   Where "X" stands in for any letter between A and Z:
+#   X_MODE_KEYS    a list of Key's
+#   X_CHAR_KEYS    a list of Key's
+#   SHIFT_KEY      a Key (typically LEFTSHIFT or RIGHTSHIFT)
+#   CTRL_KEY       a Key (typically LEFTCTRL or RIGHTCTRL)
+#   ALT_KEY        a Key (typically LEFTALT or RIGHTALT)
+#   QUIT_KEY       a Key
 #  [SpecialChars]
-#   SPECIAL_CHARS a dict; keys are str's, values are lists of Keypress'es
+#   SPECIAL_CHARS  a dict; keys are str's, values are lists of Keypress'es
 
 header_line_matcher = re.compile(r'^\[(\w+)\](#.*)?')
 # match groups:
@@ -277,6 +265,13 @@ definition_line_matcher = \
 # 1: the defined variable's name
 # 2: the defined variable's value
 # 3: the comment, if any (unused)
+
+keys_var_matcher = re.compile(r'([A-Z])_(MODE|CHAR)_KEYS')
+# for use in identifying mod and char key set definitions
+# match groups:
+# 0: the whole variable name (unused)
+# 1: the letter associated with the key set
+# 2: whether it's a mode or char key set definition
 
 special_char_matcher = re.compile(r'^\+[\w_]+$')
 # for use in identifying valid SpecialChars definitions
@@ -327,25 +322,21 @@ for line in conf_file:
                 else:
                     print("Invalid definition in conf file! Error on line " +\
                           str(line_count))
+            elif var_name == "DEFAULT_LABEL":
+                DEFAULT_LABEL = var_value
             else:
                 print("Invalid definition in conf file! Error on line " +\
                       str(line_count))
         elif header == "InputKeys":
-            if var_name in ("M_MODE_KEYS", "U_MODE_KEYS", "L_MODE_KEYS",
-                            "M_CHAR_KEYS", "U_CHAR_KEYS", "L_CHAR_KEYS"):
+            keys_var_matches = keys_var_matcher.match(var_name)
+            if keys_var_matches != None:
+                keyset = keys_var_matches.group(2)
+                keyset_label = keys_var_matches.group(1)
                 new_keys = tuple((Key(name) for name in var_value.split()))
-                if var_name == "M_MODE_KEYS":
-                    M_MODE_KEYS = new_keys
-                elif var_name == "U_MODE_KEYS":
-                    U_MODE_KEYS = new_keys
-                elif var_name == "L_MODE_KEYS":
-                    L_MODE_KEYS = new_keys
-                elif var_name == "M_CHAR_KEYS":
-                    M_CHAR_KEYS = new_keys
-                elif var_name == "U_CHAR_KEYS":
-                    U_CHAR_KEYS = new_keys
-                elif var_name == "L_CHAR_KEYS":
-                    L_CHAR_KEYS = new_keys
+                if keyset == "MODE":
+                    MODE_KEYS[keyset_label] = new_keys
+                elif keyset == "CHAR":
+                    CHAR_KEYS[keyset_label] = new_keys
                 else:
                     print("Invalid definition in conf file! Error on line " +\
                           str(line_count))
@@ -393,24 +384,24 @@ for line in conf_file:
 # absolutely disgusting:
 mode_line_matcher =\
     re.compile(
-        r'^([MUL])?([-*]{4,})'
-        r'((:)|=\s*((S\+|C\+|M\+)*)([MUL])?([-*]{4,}))\s*(#.*)?')
+        r'^([A-Z])?([-*]{4,})'
+        r'((:)|=\s*((S\+|C\+|M\+)*)([A-Z])?([-*]{4,}))\s*(#.*)?')
 # match groups:
 # 0: the whole line, if it's a valid mode line (unused)
-# 1: the position modifier of the mode keys, if any
+# 1: the laber of the mode keys, if any
 # 2: the keys of the mode this is defining
 # 3: the rest of the line that isn't a comment (unused)
 # 4: the colon, if it's an original mode and not a copied one
 # 5: the modifier keys, if it's a copied mode
 # 6: the last modifier key, if it's a copied mode (unused)
-# 7: the position of the mode it's copying from, if any
+# 7: the label of the mode it's copying from, if any
 # 8: the keys of mode it's copying from, if any
 # 9: the comment, if any (unused)
 
-char_line_matcher = re.compile(r'([ MUL])([-* ]{6}) (.+);\s*(#.*)?')
+char_line_matcher = re.compile(r'([ A-Z])([-* ]{6}) (.+);\s*(#.*)?')
 # match groups:
 # 0: the whole line, if it's a valid char line (unused)
-# 1: the position modifier of the char keys, if any
+# 1: the label of the char keys, if any
 # 2: the keys of the char that this is defining
 # 3: the char that this is defining
 # 4: the comment, if any (unused)
@@ -430,7 +421,7 @@ for line in layout_file:
     mode_line_matches = mode_line_matcher.match(line)
     if mode_line_matches != None: # it's a mode line
         mode = mode_line_matches.group(2)
-        mode_position = 'M'
+        mode_position = DEFAULT_LABEL
         if mode_line_matches.group(1) != None:
             mode_position = mode_line_matches.group(1)
             # print(("%(line_count)03d"+": "+mode_position+mode) %\
@@ -474,7 +465,7 @@ for line in layout_file:
         continue
     char_line_matches = char_line_matcher.match(line)
     if char_line_matches != None: # it's a char line
-        char_position = 'M'
+        char_position = DEFAULT_LABEL
         if char_line_matches.group(1) != ' ':
             char_position = char_line_matches.group(1)
         layout_combo = LayoutCombo(mode,
@@ -506,12 +497,11 @@ for line in layout_file:
 #     print(key+" : "+layout_combos[key].output_code+" : "+\
 #           str([keypress.key_name for keypress in layout_combos[key].output_keys]))
 ui = evdev.UInput()
-kb = evdev.InputDevice('/dev/input/event0')
-kb.grab()
+kb.grab() # kb was opened at very beginning of file, to read ecodes out of
 mode_keys_active = set([])
 char_keys_active = set([])
-ALL_MODE_KEYS = set(M_MODE_KEYS + U_MODE_KEYS + L_MODE_KEYS)
-ALL_CHAR_KEYS = set(M_CHAR_KEYS + U_CHAR_KEYS + L_CHAR_KEYS)
+ALL_MODE_KEYS = set(reduce(lambda x,y: x+y, MODE_KEYS.values()))
+ALL_CHAR_KEYS = set(reduce(lambda x,y: x+y, CHAR_KEYS.values()))
 for event in kb.read_loop():
     if event.type == evdev.ecodes.EV_KEY:
         key_event = evdev.categorize(event)

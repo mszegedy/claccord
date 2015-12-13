@@ -13,6 +13,7 @@ Todo:
 - Make it maximally compatible with every keyboard layout by switching the
   backend to Xlib and using XKeyEvents to send keypresses instead.
 - Make the hashing on the key combos much faster.
+- Or instead, use keymasks to store key combos, not lists.
 - Allow an arbitrary number of sets of mode keys and char keys, or at
   least sets labeled A-Z rather than just M/U/L.
 - Allow switching of claccord layouts using the number keys.
