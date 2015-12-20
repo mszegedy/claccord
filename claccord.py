@@ -1,42 +1,31 @@
 #!/usr/bin/python
 
-#### claccordd.py
-#### copyright 2015 (c) by mszegedy
-####
-#### This program is free software; you can redistribute it and/or modify it
-#### under the terms of the GNU General Public License as published by the Free
-#### Software Foundation; either version 2 of the License, or (at your option)
-#### any later version.
-####
-#### This program is distributed in the hope that it will be useful, but
-#### WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-#### or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-#### for more details.
-####
-#### You should have received a copy of the GNU General Public License along
-#### with this program; if not, write to the Free Software Foundation, Inc., 51
-#### Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+"""
+claccord.py
 
-"""claccordd daemon main file."""
+claccord daemon main file
 
-### imports
+copyright 2015 (c) by mszegedy
+"""
+
+# imports
 import sys   # exiting nicely
 import copy  # copying KeyCombo's over
 import re    # parsing files
 import evdev # I/O
 from functools import reduce
 
-### necessary grabbing of keyboard so that keymasks can be formulated
+# necessary grabbing of keyboard so that keymasks can be formulated
 kb = evdev.InputDevice('/dev/input/event0')
 KB_CAPABILITIES = kb.capabilities()[1] #list of ecodes that work on the kb
 HIGHEST_SCANCODE = max(KB_CAPABILITIES)
 
-### constants
+# constants
 KEYDOWN = 1 # evdev events use 1 for key being pressed down and
 KEYUP = 0   # 0 for key being lifted back up
 ECODES = evdev.ecodes.ecodes
 
-### global variables that will get defined later when keys.conf is read
+# global variables that will get defined later when keys.conf is read
 ONE_KEY_MODE = None  # True or False
 DEFAULT_LABEL = None # a string matching the regex /^[A-Z]$/
 MODE_KEYS = {}       # a dict of tuples of Key's
