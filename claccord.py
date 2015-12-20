@@ -1,5 +1,4 @@
 #!/usr/bin/python
-
 """
 claccord.py
 
@@ -9,20 +8,20 @@ copyright 2015 (c) by mszegedy
 """
 
 # imports
-import sys   # exiting nicely
-import copy  # copying KeyCombo's over
-import re    # parsing files
-import evdev # I/O
+import sys    # exiting nicely
+import copy   # copying KeyCombo's over
+import re     # parsing files
+import evdev  # I/O
 from functools import reduce
 
 # necessary grabbing of keyboard so that keymasks can be formulated
 kb = evdev.InputDevice('/dev/input/event0')
-KB_CAPABILITIES = kb.capabilities()[1] #list of ecodes that work on the kb
+KB_CAPABILITIES = kb.capabilities()[1]  # list of ecodes that work on the kb
 HIGHEST_SCANCODE = max(KB_CAPABILITIES)
 
 # constants
-KEYDOWN = 1 # evdev events use 1 for key being pressed down and
-KEYUP = 0   # 0 for key being lifted back up
+KEYDOWN = 1  # evdev events use 1 for key being pressed down and
+KEYUP = 0    # 0 for key being lifted back up
 ECODES = evdev.ecodes.ecodes
 
 # global variables that will get defined later when keys.conf is read
@@ -36,7 +35,8 @@ ALT_KEY = None       # a Key (typically LEFTALT or RIGHTALT)
 QUIT_KEY = None      # a Key
 SPECIAL_CHARS = {}   # a dict; keys are str's, values are lists of Keypress'es
 
-### functions
+
+# functions
 def scancodes_hash(codes):
     """
     Hashes an array of scancodes into a big number.
@@ -50,11 +50,13 @@ def scancodes_hash(codes):
     # algorithm provided by Mihai on the Theoretical Computer Science Stack
     # Exchange at the URL:
     # http://cstheory.stackexchange.com/questions/3390/is-there-a-hash-function-for-a-collection-i-e-multi-set-of-integers-that-has
-    big_prime = HIGHEST_SCANCODE # big enough for our purposes
+    big_prime = HIGHEST_SCANCODE  # big enough for our purposes
     output = 0
     for index, code in enumerate(codes):
         output += code*big_prime**index
     return int(output)
+
+
 def keys_hash(keys):
     """
     Hashes the array of keyboard Keys "keys" into a big number, based on their
@@ -69,7 +71,7 @@ def keys_hash(keys):
     """
     return scancodes_hash([key.code for key in keys])
 
-### classes
+
 class Key:
     """
     Stores the name and code of a key.
@@ -154,15 +156,19 @@ class LayoutCombo:
                 self.output_keypresses.extend(
                     tuple((Keypress(CTRL_KEY, "DOWN"),
                            Keypress(SHIFT_KEY, "DOWN"),
-                           Keypress(Key('U'), "DOWN"))) +\
-                    tuple((Keypress(Key(digit.upper())) for digit in \
-                           unicode_sequence)) +\
+                           Keypress(Key('U'), "DOWN"))) +
+
+                    tuple((Keypress(Key(digit.upper())) for digit in unicode_sequence)) +
+
                     tuple((Keypress(Key('U'), "UP"),
                            Keypress(SHIFT_KEY, "UP"),
-                           Keypress(CTRL_KEY, "UP"))))
+                           Keypress(CTRL_KEY, "UP"))
+                          )
+                    )
+
     def set_mode(self, mode_code, mode_position=None):
         self.mode_keys = []
-        if mode_position == None:
+        if mode_position is None:
             mode_position = DEFAULT_LABEL
         mode_keys_map = MODE_KEYS[mode_position]
         for place, sign in enumerate(mode_code):
@@ -171,9 +177,10 @@ class LayoutCombo:
                 # Is it really Easier to Ask Forgiveness than Permission?
                 assert isinstance(key, Key)
                 self.mode_keys.append(key)
+
     def set_char(self, char_code, char_position=None):
         self.char_keys = []
-        if char_position == None:
+        if char_position is None:
             char_position = DEFAULT_LABEL
         char_keys_map = CHAR_KEYS[char_position]
         for place, sign in enumerate(char_code):
@@ -182,6 +189,7 @@ class LayoutCombo:
                 # Is it really Easier to Ask Forgiveness than Permission?
                 assert isinstance(key, Key)
                 self.char_keys.append(key)
+
     def type_out(self, ui):
         """Types the character or character sequence represented by this
         combination."""
@@ -200,6 +208,7 @@ class LayoutCombo:
                 print(keypress.key.name+" UP")
         ui.syn()
 
+
 class LayoutComboContainer:
     "A data structure that stores the layout combos."
     def __init__(self):
@@ -208,6 +217,7 @@ class LayoutComboContainer:
         # dict, keys are mode-key hashes ->
         # dict, keys are char-key hashes ->
         # LayoutCombo
+
     def store(self, layout):
         mode_keys_hash = keys_hash(layout.mode_keys)
         char_keys_hash = keys_hash(layout.char_keys)
@@ -216,30 +226,33 @@ class LayoutComboContainer:
         except KeyError:
             self.data[mode_keys_hash] = {}
         self.data[mode_keys_hash][char_keys_hash] = layout
+
     def retrieve(self, mode_keys, char_keys):
         # detect whether this is an array of scancodes or keys:
         if isinstance(char_keys[0], int):
-            return self.data[scancodes_hash(mode_keys)]\
+            return self.data[scancodes_hash(mode_keys)] \
                             [scancodes_hash(char_keys)]
         elif isinstance(char_keys[0], Key):
             return self.data[keys_hash(mode_keys)][keys_hash(char_keys)]
 
-### process the conf file
-## matchers and necessary variables
-# A review of the variables keys.conf sets:
-#  [GeneralSettings]
-#   ONE_KEY_MODE   True or False
-#   DEFAULT_LABEL  a letter between A and Z
-#  [InputKeys]
-#   Where "X" stands in for any letter between A and Z:
-#   X_MODE_KEYS    a list of Key's
-#   X_CHAR_KEYS    a list of Key's
-#   SHIFT_KEY      a Key (typically LEFTSHIFT or RIGHTSHIFT)
-#   CTRL_KEY       a Key (typically LEFTCTRL or RIGHTCTRL)
-#   ALT_KEY        a Key (typically LEFTALT or RIGHTALT)
-#   QUIT_KEY       a Key
-#  [SpecialChars]
-#   SPECIAL_CHARS  a dict; keys are str's, values are lists of Keypress'es
+"""
+process the conf file
+matchers and necessary variables
+ A review of the variables keys.conf sets:
+  [GeneralSettings]
+   ONE_KEY_MODE   True or False
+   DEFAULT_LABEL  a letter between A and Z
+  [InputKeys]
+   Where "X" stands in for any letter between A and Z:
+   X_MODE_KEYS    a list of Key's
+   X_CHAR_KEYS    a list of Key's
+   SHIFT_KEY      a Key (typically LEFTSHIFT or RIGHTSHIFT)
+   CTRL_KEY       a Key (typically LEFTCTRL or RIGHTCTRL)
+   ALT_KEY        a Key (typically LEFTALT or RIGHTALT)
+   QUIT_KEY       a Key
+  [SpecialChars]
+   SPECIAL_CHARS  a dict; keys are str's, values are lists of Keypress'es
+"""
 
 header_line_matcher = re.compile(r'^\[(\w+)\](#.*)?')
 # match groups:
@@ -278,7 +291,7 @@ blank_line_matcher = re.compile(r'^\s*(#.*)?')
 # 0: the whole line, if it's a valid blank line (unused)
 # 1: the comment, if any (unused)
 
-## start processing
+# start processing
 try:
     conf_file = open('keys.conf', 'r')
 except FileNotFoundError:
@@ -298,7 +311,7 @@ for line in conf_file:
                   str(line_count))
         continue
     definition_line_matches = definition_line_matcher.match(line)
-    if definition_line_matches != None: # it's a definition
+    if definition_line_matches:  # it's a definition
         var_name = definition_line_matches.group(1)
         var_value = definition_line_matches.group(2)
         if header == "GeneralSettings":
@@ -309,16 +322,16 @@ for line in conf_file:
                 elif lowered == "false":
                     ONE_KEY_MODE = False
                 else:
-                    print("Invalid definition in conf file! Error on line " +\
+                    print("Invalid definition in conf file! Error on line " +
                           str(line_count))
             elif var_name == "DEFAULT_LABEL":
                 DEFAULT_LABEL = var_value
             else:
-                print("Invalid definition in conf file! Error on line " +\
+                print("Invalid definition in conf file! Error on line " +
                       str(line_count))
         elif header == "InputKeys":
             keys_var_matches = keys_var_matcher.match(var_name)
-            if keys_var_matches != None:
+            if keys_var_matches:
                 keyset = keys_var_matches.group(2)
                 keyset_label = keys_var_matches.group(1)
                 new_keys = tuple((Key(name) for name in var_value.split()))
@@ -327,7 +340,7 @@ for line in conf_file:
                 elif keyset == "CHAR":
                     CHAR_KEYS[keyset_label] = new_keys
                 else:
-                    print("Invalid definition in conf file! Error on line " +\
+                    print("Invalid definition in conf file! Error on line " +
                           str(line_count))
             elif var_name == "SHIFT_KEY":
                 SHIFT_KEY = Key(var_value)
@@ -344,7 +357,7 @@ for line in conf_file:
             elif var_name == "QUIT_KEY":
                 QUIT_KEY = Key(var_value)
             else:
-                print("Invalid definition in conf file! Error on line " +\
+                print("Invalid definition in conf file! Error on line " +
                       str(line_count))
         elif header == "SpecialChars":
             if special_char_matcher.match(var_name) != None:
@@ -364,7 +377,7 @@ for line in conf_file:
                       str(line_count))
         continue
     blank_line_matches = blank_line_matcher.match(line)
-    if blank_line_matches != None: # it's blank
+    if blank_line_matches:  # it's blank
         continue
     print("Invalid conf file! Error on line "+str(line_count))
 
