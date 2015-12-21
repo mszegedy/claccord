@@ -10,15 +10,16 @@ it grabs the required keys to produce them for some reason.
 
 Todo:
 
-- Make it maximally compatible with every keyboard layout by switching the
-  backend to Xlib and using XKeyEvents to send keypresses instead.
-- Make the hashing on the key combos much faster.
-- Or instead, use keymasks to store key combos, not lists.
-- Allow an arbitrary number of sets of mode keys and char keys, or at
-  least sets labeled A-Z rather than just M/U/L.
-- Allow switching of claccord layouts using the number keys.
-- Come up with a complete suite of presets that represent the typical
-  use case, and not just my personal needs. Especially come up with a
-layout for IPA.
-- Write an install script.
-- Clean up a little.
+- Fix backend:
+  - Excise `evdev`, replace with custom Xlib C++ interface wrapped with
+    `ctypes`
+  - Break up `claccord.py` into a server and client, and further break up
+    both into libraries
+  - Develop better hashing for the key combos (maybe using keymasks)
+- Add features:
+  - Add the option to switch between layouts using number keys
+  - Make one-key mode actually work
+  - Allow more sets of mode keys and char keys (currently 26 of each)
+  - Make a set of standard layout files for different languages
+  - Add optional exception for one or more modifier keys (so that
+    claccord plays nicely with things like i3)
