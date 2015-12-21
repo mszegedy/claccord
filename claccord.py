@@ -235,24 +235,22 @@ class LayoutComboContainer:
         elif isinstance(char_keys[0], Key):
             return self.data[keys_hash(mode_keys)][keys_hash(char_keys)]
 
-"""
-process the conf file
-matchers and necessary variables
- A review of the variables keys.conf sets:
-  [GeneralSettings]
-   ONE_KEY_MODE   True or False
-   DEFAULT_LABEL  a letter between A and Z
-  [InputKeys]
-   Where "X" stands in for any letter between A and Z:
-   X_MODE_KEYS    a list of Key's
-   X_CHAR_KEYS    a list of Key's
-   SHIFT_KEY      a Key (typically LEFTSHIFT or RIGHTSHIFT)
-   CTRL_KEY       a Key (typically LEFTCTRL or RIGHTCTRL)
-   ALT_KEY        a Key (typically LEFTALT or RIGHTALT)
-   QUIT_KEY       a Key
-  [SpecialChars]
-   SPECIAL_CHARS  a dict; keys are str's, values are lists of Keypress'es
-"""
+# process the conf file
+# matchers and necessary variables
+# A review of the variables keys.conf sets:
+#  [GeneralSettings]
+#   ONE_KEY_MODE   True or False
+#   DEFAULT_LABEL  a letter between A and Z
+#  [InputKeys]
+#   Where "X" stands in for any letter between A and Z:
+#   X_MODE_KEYS    a list of Key's
+#   X_CHAR_KEYS    a list of Key's
+#   SHIFT_KEY      a Key (typically LEFTSHIFT or RIGHTSHIFT)
+#   CTRL_KEY       a Key (typically LEFTCTRL or RIGHTCTRL)
+#   ALT_KEY        a Key (typically LEFTALT or RIGHTALT)
+#   QUIT_KEY       a Key
+#  [SpecialChars]
+#   SPECIAL_CHARS  a dict; keys are str's, values are lists of Keypress'es
 
 header_line_matcher = re.compile(r'^\[(\w+)\](#.*)?')
 # match groups:
